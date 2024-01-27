@@ -6,9 +6,10 @@ from src.dag_model import DAGModel, Product, CycleError
 class TestDAGModel(unittest.TestCase):
     def setUp(self):
         self.dag_model = DAGModel()
-        self.product1 = Product("Plasmid1", set(), "Notes1", target=datetime(2024, 1, 30))
-        self.product2 = Product("Plasmid2", {self.product1}, "Notes2", target=datetime(2024, 2, 15))
-        self.product3 = Product("Plasmid3", {self.product2}, "Notes3", target=datetime(2024, 3, 20))
+        self.product1 = Product("Plasmid1", set(), notes="Notes1", target=datetime(2024, 1, 30))
+        self.product2 = Product("Plasmid2", {self.product1}, notes="Notes2", target=datetime(2024, 2, 15))
+        self.product3 = Product("Plasmid3", {self.product2}, notes="Notes3", target=datetime(2024, 3, 20))
+        self.product4 = Product("Plasmid4")
 
     def test_add_product(self):
         self.dag_model.add_product(self.product1)
@@ -39,6 +40,24 @@ class TestDAGModel(unittest.TestCase):
         self.dag_model.add_product(self.product1)
         with self.assertRaises(CycleError):
             _ = self.dag_model.order
+    
+    def test_all_prerequisites(self):
+        # Set up dependencies
+        self.dag_model.add_dependency(self.product4, self.product3, self.product2)
+        self.dag_model.add_dependency(self.product3, self.product2)
+        self.dag_model.add_dependency(self.product2, self.product1)
+
+        # Get all prerequisites for product4
+        prerequisites = set(self.dag_model.all_prerequisites(self.product4))
+
+        # Check that all prerequisites are correctly identified
+        expected_prerequisites = {self.product1, self.product2, self.product3}
+        self.assertEqual(prerequisites, expected_prerequisites)
+
+        # Test with a product that has no prerequisites
+        prerequisites_no_deps = set(self.dag_model.all_prerequisites(self.product1))
+        self.assertEqual(prerequisites_no_deps, set())
+
 
 if __name__ == '__main__':
     unittest.main()

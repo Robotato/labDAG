@@ -25,6 +25,10 @@ class DAGModel:
         self._nodes[product.uuid] = product
         self._graph[product.uuid] = {pre.uuid for pre in product.prerequisites}
         self._sorter.add(product.uuid, *[pre.uuid for pre in product.prerequisites])
+    
+    def add_dependency(self, product, *prerequisites):
+        product.prerequisites.update(prerequisites)
+        self.add_product(product)
 
     def remove_product(self, product):
         # remove from nodes
@@ -39,6 +43,9 @@ class DAGModel:
         # re-create sorter
         self._sorter = TopologicalSorter(self._graph)
 
+    def get_product_by_uuid(self, uuid):
+        return self._nodes[uuid]
+
     def get_products_by_name(self, product_name):
         result = []
         for product in self._nodes.values():
@@ -46,6 +53,21 @@ class DAGModel:
                 result.append(product)
 
         return result
+    
+    def all_prerequisites(self, product):
+        queue = [pre for pre in product.prerequisites]
+        seen = set()
+        
+        while len(queue) > 0:
+            pre = queue.pop()
+            seen.add(pre)
+            queue.extend(p for p in pre.prerequisites if p not in seen)
+
+            yield pre
+
+    @property
+    def products(self):
+        return [product for product in self._nodes.values()]
 
     @property
     def order(self):
@@ -65,10 +87,3 @@ class DAGModel:
 
     def to_file(self, filepath):
         pass
-
-
-def main():
-    pass
-
-if __name__ == "__main__":
-    main()
