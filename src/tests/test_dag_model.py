@@ -13,13 +13,13 @@ class TestDAGModel(unittest.TestCase):
 
     def test_add_product(self):
         self.dag_model.add_product(self.product1)
-        self.assertIn(self.product1.uuid, self.dag_model._nodes)
-        self.assertEqual(self.product1, self.dag_model._nodes[self.product1.uuid])
+        self.assertIn(self.product1._uuid, self.dag_model._nodes)
+        self.assertEqual(self.product1, self.dag_model._nodes[self.product1._uuid])
 
     def test_remove_product(self):
         self.dag_model.add_product(self.product1)
         self.dag_model.remove_product(self.product1)
-        self.assertNotIn(self.product1.uuid, self.dag_model._nodes)
+        self.assertNotIn(self.product1._uuid, self.dag_model._nodes)
 
     def test_get_products_by_name(self):
         self.dag_model.add_product(self.product1)
@@ -57,6 +57,20 @@ class TestDAGModel(unittest.TestCase):
         # Test with a product that has no prerequisites
         prerequisites_no_deps = set(self.dag_model.all_prerequisites(self.product1))
         self.assertEqual(prerequisites_no_deps, set())
+    
+    def test_xml(self):
+        # Set up dependencies
+        self.dag_model.add_dependency(self.product4, self.product3, self.product2)
+        self.dag_model.add_dependency(self.product3, self.product2)
+        self.dag_model.add_dependency(self.product2, self.product1)
+
+        # Write to file
+        self.dag_model.to_xml("temp.xml")
+
+        # Read from file
+        dag_2 = DAGModel.from_xml("temp.xml")
+
+        self.assertEqual(self.dag_model, dag_2)
 
 
 if __name__ == '__main__':
