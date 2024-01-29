@@ -6,9 +6,9 @@ from src.dag_model import DAGModel, Product, CycleError
 class TestDAGModel(unittest.TestCase):
     def setUp(self):
         self.dag_model = DAGModel()
-        self.product1 = Product("Plasmid1", set(), notes="Notes1", target=datetime(2024, 1, 30))
-        self.product2 = Product("Plasmid2", {self.product1}, notes="Notes2", target=datetime(2024, 2, 15))
-        self.product3 = Product("Plasmid3", {self.product2}, notes="Notes3", target=datetime(2024, 3, 20))
+        self.product1 = Product("Plasmid1", notes="Notes1", target=datetime(2024, 1, 30))
+        self.product2 = Product("Plasmid2", notes="Notes2", target=datetime(2024, 2, 15))
+        self.product3 = Product("Plasmid3", notes="Notes3", target=datetime(2024, 3, 20))
         self.product4 = Product("Plasmid4")
 
     def test_add_product(self):
@@ -30,14 +30,13 @@ class TestDAGModel(unittest.TestCase):
 
     def test_order_property(self):
         self.dag_model.add_product(self.product1)
-        self.dag_model.add_product(self.product2)
-        self.dag_model.add_product(self.product3)
+        self.dag_model.add_product(self.product2, self.product1)
+        self.dag_model.add_product(self.product3, self.product2)
         ordered_products = self.dag_model.order
         
         self.assertEqual((self.product1, self.product2, self.product3), ordered_products)
 
-        self.product1.prerequisites = {self.product3}
-        self.dag_model.add_product(self.product1)
+        self.dag_model.add_product(self.product1, self.product3)
         with self.assertRaises(CycleError):
             _ = self.dag_model.order
     
@@ -48,15 +47,17 @@ class TestDAGModel(unittest.TestCase):
         self.dag_model.add_dependency(self.product2, self.product1)
 
         # Get all prerequisites for product4
-        prerequisites = set(self.dag_model.all_prerequisites(self.product4))
+        prerequisites = list(self.dag_model.all_prerequisites(self.product4))
 
         # Check that all prerequisites are correctly identified
-        expected_prerequisites = {self.product1, self.product2, self.product3}
-        self.assertEqual(prerequisites, expected_prerequisites)
+        expected_prerequisites = [self.product1, self.product2, self.product3]
+        for prod in prerequisites + expected_prerequisites:
+            self.assertIn(prod, prerequisites)
+            self.assertIn(prod, expected_prerequisites)
 
         # Test with a product that has no prerequisites
-        prerequisites_no_deps = set(self.dag_model.all_prerequisites(self.product1))
-        self.assertEqual(prerequisites_no_deps, set())
+        prerequisites_no_deps = list(self.dag_model.all_prerequisites(self.product1))
+        self.assertListEqual(prerequisites_no_deps, [])
     
     def test_xml(self):
         # Set up dependencies

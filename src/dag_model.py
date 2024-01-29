@@ -14,10 +14,9 @@ class Status(Enum):
         return "⬜🚧✅"[self.value]
 
 class Product():
-    def __init__(self, name="", prerequisites=set(), status=None, target=None, notes=None):
+    def __init__(self, name="", status=None, target=None, notes=None):
         self._uuid=uuid.uuid4()
         self.name = name
-        self.prerequisites = prerequisites
         self.status = status if status is not None else Status.TO_DO
         self.target = target
         self.notes = notes
@@ -25,18 +24,9 @@ class Product():
     def __eq__(self, __value: object) -> bool:
         return (self._uuid == __value._uuid
                 and self.name == __value.name
-                and self.prerequisites == __value.prerequisites
                 and self.status == __value.status
                 and self.target == __value.target
                 and self.notes == __value.notes)
-
-    def __hash__(self) -> int:
-        return hash((self._uuid,
-                     self.name,
-                     (pre for pre in self.prerequisites),
-                     self.status,
-                     self.target,
-                     self.notes))
 
     def __repr__(self) -> str:
         return f"{self.name} ({str(self._uuid)[-8:]}) {self.status.to_symbol()}"
@@ -47,19 +37,18 @@ class DAGModel:
         self._graph = {}
         self._sorter = TopologicalSorter()
 
-    def add_product(self, product):
+    def add_product(self, product, *prerequisites):
         self._nodes[product._uuid] = product
-        self._graph[product._uuid] = {pre._uuid for pre in product.prerequisites}
-        self._sorter.add(product._uuid, *[pre._uuid for pre in product.prerequisites])
+        self._graph[product._uuid] = {pre._uuid for pre in prerequisites}
+        self._sorter.add(product._uuid, *[pre._uuid for pre in prerequisites])
 
         # Recursively add prerequisites if they are not already in the DAG
-        for pre in product.prerequisites:
+        for pre in prerequisites:
             if pre._uuid not in self._nodes:
                 self.add_product(pre)
     
     def add_dependency(self, product, *prerequisites):
-        product.prerequisites.update(prerequisites)
-        self.add_product(product)
+        self.add_product(product, *prerequisites)
 
     def remove_product(self, product):
         # remove from nodes
@@ -67,9 +56,8 @@ class DAGModel:
 
         # remove from graph
         for product_id, product in self._nodes.items():
-            if product_id in product.prerequisites:
-                product.prerequisites.remove(product_id)
-                self._graph[product_id].remove(product_id)
+            if product._uuid in self._graph[product_id]:
+                self._graph[product_id].remove(product._uuid)
         
         # re-create sorter
         self._sorter = TopologicalSorter(self._graph)
@@ -84,15 +72,18 @@ class DAGModel:
                 result.append(product)
 
         return result
+
+    def get_prerequisites(self, product):
+        return [self._nodes[pre_id] for pre_id in self._graph[product._uuid]]
     
     def all_prerequisites(self, product):
-        queue = [pre for pre in product.prerequisites]
+        queue = [pre for pre in self.get_prerequisites(product)]
         seen = set()
         
         while len(queue) > 0:
             pre = queue.pop()
-            seen.add(pre)
-            queue.extend(p for p in pre.prerequisites if p not in seen)
+            seen.add(pre._uuid)
+            queue.extend(p for p in self.get_prerequisites(pre) if p._uuid not in seen)
 
             yield pre
 
@@ -120,7 +111,11 @@ class DAGModel:
 
         for product_element in root.findall('Product'):
             name = product_element.find('Name').text
+
             status = product_element.find('Status').text
+            if status is not None:
+                status = Status(status)
+            
             id = uuid.UUID(product_element.find('UUID').text)
             notes = product_element.find('Notes').text
 
@@ -128,13 +123,13 @@ class DAGModel:
             if target_date is not None:
                 target_date = datetime.strptime(target_date.text, "%Y-%m-%d")
 
-            prereqs = set()
+            prereqs = []
             for pre in product_element.find("Prerequisites"):
-                prereqs.add(dag_model._nodes[uuid.UUID(pre.text)])
+                prereqs.append(dag_model._nodes[uuid.UUID(pre.text)])
 
-            product = Product(name, prerequisites=prereqs, status=status, notes=notes, target=target_date)
+            product = Product(name, status=status, notes=notes, target=target_date)
             product._uuid = id
-            dag_model.add_product(product)
+            dag_model.add_product(product, *prereqs)
 
         return dag_model
 
@@ -144,14 +139,14 @@ class DAGModel:
         for product in self.order:
             product_element = ET.SubElement(root, "Product")
             ET.SubElement(product_element, "Name").text = product.name
-            ET.SubElement(product_element, "Status").text = product.status
+            ET.SubElement(product_element, "Status").text = product.status.value
             ET.SubElement(product_element, "UUID").text = str(product._uuid)
             ET.SubElement(product_element, "Notes").text = product.notes
             if product.target:
                 ET.SubElement(product_element, "Target").text = product.target.strftime("%Y-%m-%d")
 
             prereqs_element = ET.SubElement(product_element, "Prerequisites")
-            for pre in product.prerequisites:
+            for pre in self.get_prerequisites(product):
                 ET.SubElement(prereqs_element, "Prerequisite").text = str(pre._uuid)
 
             tree = ET.ElementTree(root)
