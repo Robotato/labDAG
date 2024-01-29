@@ -9,10 +9,10 @@ class TestValidateDAG(unittest.TestCase):
     def setUp(self):
         self.dag_model = DAGModel()
 
-        self.product1 = Product("Plasmid1", set(), notes="Notes1", target=datetime(2024, 1, 30))
-        self.product2 = Product("Plasmid2", set(), notes="Notes2", target=datetime(2024, 2, 20))
-        self.product3 = Product("Plasmid3", set(), notes="Notes3", target=datetime(2024, 3, 20))
-        self.product4 = Product("Plasmid4", set(), notes="Notes4", target=None)
+        self.product1 = Product("Plasmid1", notes="Notes1", target=datetime(2024, 1, 30))
+        self.product2 = Product("Plasmid2", notes="Notes2", target=datetime(2024, 2, 20))
+        self.product3 = Product("Plasmid3", notes="Notes3", target=datetime(2024, 3, 20))
+        self.product4 = Product("Plasmid4", notes="Notes4", target=None)
 
     def test_valid_dag(self):
         self.dag_model.add_product(self.product1)
