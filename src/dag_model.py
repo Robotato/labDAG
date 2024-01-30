@@ -28,7 +28,8 @@ class Status(Enum):
 
 class Product():
     def __init__(self, name="", status=None, target=None, notes=None):
-        self._uuid=uuid.uuid4()
+        self._uuid = uuid.uuid4()
+        self._created = datetime.now().replace(microsecond=0)
         self.name = name
         self.status = status if status is not None else Status.TO_DO
         self.target = target
@@ -36,13 +37,14 @@ class Product():
     
     def __eq__(self, __value: object) -> bool:
         return (self._uuid == __value._uuid
+                and self._created == __value._created
                 and self.name == __value.name
                 and self.status == __value.status
                 and self.target == __value.target
                 and self.notes == __value.notes)
 
     def __repr__(self) -> str:
-        return f"{self.name} ({str(self._uuid)[-8:]}) {self.status.to_symbol()}"
+        return f"{self.name} ({str(self._uuid)[-8:]}) [{self._created.strftime('%d/%m/%Y %H:%M:%S')}] {self.status.to_symbol()}"
 
 class DAGModel:
     def __init__(self):
@@ -132,6 +134,8 @@ class DAGModel:
             id = uuid.UUID(product_element.find('UUID').text)
             notes = product_element.find('Notes').text
 
+            created = datetime.strptime(product_element.find("Created").text, "%d/%m/%Y %H:%M:%S")
+
             target_date = product_element.find('Target')
             if target_date is not None:
                 target_date = datetime.strptime(target_date.text, "%Y-%m-%d")
@@ -142,6 +146,7 @@ class DAGModel:
 
             product = Product(name, status=status, notes=notes, target=target_date)
             product._uuid = id
+            product._created = created
             dag_model.add_product(product, *prereqs)
 
         return dag_model
@@ -154,6 +159,7 @@ class DAGModel:
             ET.SubElement(product_element, "Name").text = product.name
             ET.SubElement(product_element, "Status").text = product.status.value
             ET.SubElement(product_element, "UUID").text = str(product._uuid)
+            ET.SubElement(product_element, "Created").text = product._created.strftime("%d/%m/%Y %H:%M:%S")
             ET.SubElement(product_element, "Notes").text = product.notes
             if product.target:
                 ET.SubElement(product_element, "Target").text = product.target.strftime("%Y-%m-%d")
@@ -172,5 +178,5 @@ class DAGModel:
     def __str__(self) -> str:
         result = ""
         for product in self.order:
-            result += f"{product.name} ({str(product._uuid)[-8:]})\n"
+            result += f"{str(product)}\n"
         return result
