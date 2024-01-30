@@ -1,5 +1,6 @@
 import unittest
 from datetime import datetime
+from pathlib import Path
 
 from src.dag_model import DAGModel, Product, CycleError
 
@@ -72,6 +73,9 @@ class TestDAGModel(unittest.TestCase):
         dag_2 = DAGModel.from_xml("temp.xml")
 
         self.assertEqual(self.dag_model, dag_2)
+
+        # Cleanup
+        Path("temp.xml").unlink()
 
 
 if __name__ == '__main__':
