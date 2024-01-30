@@ -1,4 +1,5 @@
 import cmd
+from datetime import datetime
 from src.dag_model import DAGModel, Product, Status
 from src.validate import validate_DAG
 
@@ -28,6 +29,30 @@ def select_product(dag_model, product_name):
         return matches[0]
     else:
         return select_match(matches, f"Multiple products named {product_name} found: ")
+
+
+def try_parse_datestr(datestr,
+                      formats=["%m/%d/%Y",
+                               "%m-%d-%Y",
+                               "%m/%d/%y",
+                               "%m-%d-%y",
+                               ]):
+    """Attempts to parse a string representing a date into a date object, using a list of possible formats.
+
+    Args:
+        datestr (str): the string to parse.
+        formats (list, optional): formats that the date might be in.
+
+    Returns:
+        datetime.date or None: the parsed date if successful, else None.
+    """
+    for format in formats:
+        try:
+            return datetime.strptime(datestr, format)
+        except ValueError:
+            continue
+    
+    return None
 
 
 class LabManagementShell(cmd.Cmd):
@@ -127,6 +152,32 @@ class LabManagementShell(cmd.Cmd):
             print("Invalid arguments. Usage: mark <product> <status>")
     
 
+    def do_target(self, arg):
+        'Set the target date of a product (in month/day[/year] format): target <product> <date>'
+        try:
+            args = arg.split()
+            if len(args) < 2:
+                print("Please provide a product name and date.")
+                return
+            
+            product, date = args
+            product = select_product(self.dag_model, product)
+
+            parsed_date = try_parse_datestr(date)
+            if parsed_date is None:
+                # maybe date was provided without year
+                parsed_date = try_parse_datestr(date, formats=["%m/%d", "%m-%d"])
+                parsed_date = parsed_date.replace(year=datetime.today().year)
+            if parsed_date is None:
+                raise Exception(f"Could not parse {date} as a date.")
+            
+            product.target = parsed_date
+            print(f"Set target date of {args[0]} to {product.target.strftime('%m-%d-%Y')}")
+
+        except Exception as e:
+            print(f"Error setting target date: {e}")
+
+
     def do_validate(self, arg):
         'Validate the current DAG model, reporting any cycle or date inconsistencies'
         try:
@@ -135,8 +186,11 @@ class LabManagementShell(cmd.Cmd):
                 print("No problems found.")
             else:
                 print("Issues found in DAG!")
-                print(f"Cycle: {' -> '.join(cycle)}")
-                print(f"Products with target dates before targets of some predecessor: {dates}")
+                if cycle is not None:
+                    print(f"Cycle: {' -> '.join(cycle)}")
+                if len(dates) > 0:
+                    sep = "\n\t"
+                    print(f"Products with target dates before targets of some predecessor:\n\t{sep.join([str(prod) for prod in dates])}")
         except Exception as e:
             print(f"Error validating DAG: {e}")
 
