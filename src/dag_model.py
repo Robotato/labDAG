@@ -112,10 +112,15 @@ class DAGModel:
                 successors.append(self._nodes[node_id])
         return successors
 
-    def get_endpoints(self):
+    @property
+    def endpoints(self):
         """Get a list of all products with no successors.
         """
-        pass
+        endpoints = set(self._nodes.keys())
+        for pred in self._graph.values():
+            endpoints -= pred
+        
+        return [self._nodes[n] for n in endpoints]
 
     @property
     def products(self):
