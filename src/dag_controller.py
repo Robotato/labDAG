@@ -84,6 +84,16 @@ class LabManagementShell(cmd.Cmd):
             print(f"Error adding product: {e}")
 
     
+    def do_remove(self, arg):
+        "Remove a product from the DAG: remove product"
+        try:
+            product = select_product(self.dag_model, arg)
+            self.dag_model.remove_product(product)
+            print(f"Removed product {arg}.")
+        except Exception as e:
+            print(f"Error removing product: {e}")
+
+
     def do_depends(self, arg):
         'Add one or more prerequisites to a product: depends <product> prereq1 [prereq2 prereq3 ...]'
 
@@ -125,7 +135,7 @@ class LabManagementShell(cmd.Cmd):
                 print("No problems found.")
             else:
                 print("Issues found in DAG!")
-                print(f"Cycle: {'->'.join(cycle)}")
+                print(f"Cycle: {' -> '.join(cycle)}")
                 print(f"Products with target dates before targets of some predecessor: {dates}")
         except Exception as e:
             print(f"Error validating DAG: {e}")

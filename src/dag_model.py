@@ -71,6 +71,8 @@ class DAGModel:
         del self._nodes[product._uuid]
 
         # remove from graph
+        del self._graph[product._uuid]
+        
         for product_id, product in self._nodes.items():
             if product._uuid in self._graph[product_id]:
                 self._graph[product_id].remove(product._uuid)

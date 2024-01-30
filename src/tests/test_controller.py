@@ -89,6 +89,18 @@ class TestLabManagementShell(unittest.TestCase):
         self.shell.dag_model.get_products_by_name.assert_called_with(
             product_name)
         self.assertTrue(prod.status == Status.DONE)
+    
+    def test_add_command(self):
+        pass
+
+    def test_remove_command(self):
+        pass
+
+    def test_depends_command(self):
+        pass
+
+    def test_validate_command(self):
+        pass
 
 
 if __name__ == '__main__':
