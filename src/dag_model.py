@@ -9,9 +9,22 @@ from warnings import warn
 
 class Status(Enum):
     TO_DO, IN_PROGRESS, DONE = range(3)
+    
     def to_symbol(self):
         # return "☐🧪☑"[self]
         return "⬜🚧✅"[self.value]
+    
+    @staticmethod
+    def from_string(string):
+        string = string.lower().strip()
+        if string in {"0", "to_do", "to do"}:
+            return Status.TO_DO
+        elif string in {"1", "in_progress", "in progress"}:
+            return Status.IN_PROGRESS
+        elif string in {"2", "done"}:
+            return Status.DONE
+        else:
+            raise ValueError(f"Unrecognized status: {string}.")
 
 class Product():
     def __init__(self, name="", status=None, target=None, notes=None):
@@ -149,8 +162,8 @@ class DAGModel:
             for pre in self.get_prerequisites(product):
                 ET.SubElement(prereqs_element, "Prerequisite").text = str(pre._uuid)
 
-            tree = ET.ElementTree(root)
-            tree.write(filepath)
+        tree = ET.ElementTree(root)
+        tree.write(filepath)
     
     def __eq__(self, __value: object) -> bool:
         return (self._nodes == __value._nodes

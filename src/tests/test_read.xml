@@ -1,0 +1,40 @@
+<DAGModel>
+    <Product>
+        <Name>Plasmid1</Name>
+        <Status />
+        <UUID>ab06ccdf-8887-4c4c-acbe-1915dcca668d</UUID>
+        <Notes>Notes1</Notes>
+        <Target>2024-01-30</Target>
+        <Prerequisites />
+    </Product>
+    <Product>
+        <Name>Plasmid2</Name>
+        <Status />
+        <UUID>2d4d755c-a950-459f-a870-d49c0cc6adb1</UUID>
+        <Notes>Notes2</Notes>
+        <Target>2024-02-15</Target>
+        <Prerequisites>
+            <Prerequisite>ab06ccdf-8887-4c4c-acbe-1915dcca668d</Prerequisite>
+        </Prerequisites>
+    </Product>
+    <Product>
+        <Name>Plasmid3</Name>
+        <Status />
+        <UUID>a4e42686-2137-418b-80c0-55ccdffbe26d</UUID>
+        <Notes>Notes3</Notes>
+        <Target>2024-03-20</Target>
+        <Prerequisites>
+            <Prerequisite>2d4d755c-a950-459f-a870-d49c0cc6adb1</Prerequisite>
+        </Prerequisites>
+    </Product>
+    <Product>
+        <Name>Plasmid4</Name>
+        <Status />
+        <UUID>a1e799ff-d635-46c5-9451-ae23ddcef573</UUID>
+        <Notes />
+        <Prerequisites>
+            <Prerequisite>2d4d755c-a950-459f-a870-d49c0cc6adb1</Prerequisite>
+            <Prerequisite>a4e42686-2137-418b-80c0-55ccdffbe26d</Prerequisite>
+        </Prerequisites>
+    </Product>
+</DAGModel>
