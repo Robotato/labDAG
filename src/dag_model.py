@@ -72,7 +72,7 @@ class DAGModel:
 
         # remove from graph
         del self._graph[product._uuid]
-        
+
         for product_id, product in self._nodes.items():
             if product._uuid in self._graph[product_id]:
                 self._graph[product_id].remove(product._uuid)
@@ -104,6 +104,18 @@ class DAGModel:
             queue.extend(p for p in self.get_prerequisites(pre) if p._uuid not in seen)
 
             yield pre
+
+    def get_successors(self, product):
+        successors = []
+        for node_id, pre in self._graph.items():
+            if product._uuid in pre:
+                successors.append(self._nodes[node_id])
+        return successors
+
+    def get_endpoints(self):
+        """Get a list of all products with no successors.
+        """
+        pass
 
     @property
     def products(self):

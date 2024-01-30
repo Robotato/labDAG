@@ -59,6 +59,17 @@ class TestDAGModel(unittest.TestCase):
         # Test with a product that has no prerequisites
         prerequisites_no_deps = list(self.dag_model.all_prerequisites(self.product1))
         self.assertListEqual(prerequisites_no_deps, [])
+
+    def test_get_successors(self):
+        self.dag_model.add_dependency(self.product2, self.product1)
+        self.dag_model.add_dependency(self.product3, self.product1)
+
+        successors = self.dag_model.get_successors(self.product1)
+        self.assertEqual(len(successors), 2)
+        self.assertIn(self.product2, successors)
+        self.assertIn(self.product3, successors)
+
+        self.assertEqual(self.dag_model.get_successors(self.product4), [])
     
     def test_xml(self):
         # Set up dependencies
