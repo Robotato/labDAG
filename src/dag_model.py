@@ -44,7 +44,8 @@ class Product():
                 and self.notes == __value.notes)
 
     def __repr__(self) -> str:
-        return f"{self.name} ({str(self._uuid)[-8:]}) [{self._created.strftime('%d/%m/%Y %H:%M:%S')}] {self.status.to_symbol()}"
+        target_date_str = f" [{self.target.strftime('%d/%m/%Y')}]" if self.target is not None else ""
+        return f"({str(self._uuid)[-8:]}) {self.name} {target_date_str} {self.status.to_symbol()}"
 
 class DAGModel:
     def __init__(self):
