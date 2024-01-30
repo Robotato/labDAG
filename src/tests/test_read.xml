@@ -2,7 +2,8 @@
     <Product>
         <Name>Plasmid1</Name>
         <Status />
-        <UUID>ab06ccdf-8887-4c4c-acbe-1915dcca668d</UUID>
+        <UUID>7c56b603-0f30-4bb9-92f1-5b3b2131e2c8</UUID>
+        <Created>29/01/2024 19:14:51</Created>
         <Notes>Notes1</Notes>
         <Target>2024-01-30</Target>
         <Prerequisites />
@@ -10,31 +11,34 @@
     <Product>
         <Name>Plasmid2</Name>
         <Status />
-        <UUID>2d4d755c-a950-459f-a870-d49c0cc6adb1</UUID>
+        <UUID>74aa32ae-3637-4065-b135-939e5b91d9dc</UUID>
+        <Created>29/01/2024 19:14:51</Created>
         <Notes>Notes2</Notes>
         <Target>2024-02-15</Target>
         <Prerequisites>
-            <Prerequisite>ab06ccdf-8887-4c4c-acbe-1915dcca668d</Prerequisite>
+            <Prerequisite>7c56b603-0f30-4bb9-92f1-5b3b2131e2c8</Prerequisite>
         </Prerequisites>
     </Product>
     <Product>
         <Name>Plasmid3</Name>
         <Status />
-        <UUID>a4e42686-2137-418b-80c0-55ccdffbe26d</UUID>
+        <UUID>02382d71-55ed-4288-b70a-928a55f9c0b9</UUID>
+        <Created>29/01/2024 19:14:51</Created>
         <Notes>Notes3</Notes>
         <Target>2024-03-20</Target>
         <Prerequisites>
-            <Prerequisite>2d4d755c-a950-459f-a870-d49c0cc6adb1</Prerequisite>
+            <Prerequisite>74aa32ae-3637-4065-b135-939e5b91d9dc</Prerequisite>
         </Prerequisites>
     </Product>
     <Product>
         <Name>Plasmid4</Name>
         <Status />
-        <UUID>a1e799ff-d635-46c5-9451-ae23ddcef573</UUID>
+        <UUID>72115803-d842-4faa-8fe2-aa3933f413ab</UUID>
+        <Created>29/01/2024 19:14:51</Created>
         <Notes />
         <Prerequisites>
-            <Prerequisite>2d4d755c-a950-459f-a870-d49c0cc6adb1</Prerequisite>
-            <Prerequisite>a4e42686-2137-418b-80c0-55ccdffbe26d</Prerequisite>
+            <Prerequisite>74aa32ae-3637-4065-b135-939e5b91d9dc</Prerequisite>
+            <Prerequisite>02382d71-55ed-4288-b70a-928a55f9c0b9</Prerequisite>
         </Prerequisites>
     </Product>
 </DAGModel>

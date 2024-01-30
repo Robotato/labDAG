@@ -45,7 +45,7 @@ class Product():
 
     def __repr__(self) -> str:
         target_date_str = f" [{self.target.strftime('%d/%m/%Y')}]" if self.target is not None else ""
-        return f"({str(self._uuid)[-8:]}) {self.name} {target_date_str} {self.status.to_symbol()}"
+        return f"({str(self._uuid)[-8:]}) {self.name}{target_date_str} {self.status.to_symbol()}"
 
 class DAGModel:
     def __init__(self):
