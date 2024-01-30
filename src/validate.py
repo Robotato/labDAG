@@ -10,18 +10,18 @@ def validate_DAG(dag_model):
 
     Returns:
         valid (bool): whether the DAGModel is valid.
-        cycles (list or None): products involved in a cycle if any, else None.
+        cycle (list or None): products involved in a cycle if any, else None.
         invalid_dates (list): products whose target dates are before that of some prerequisite.
     """    
 
-    cycles = None
+    cycle = None
     invalid_dates = []
 
-    # Check for cycles
+    # Check for cycle
     try:
         _ = dag_model.order
     except CycleError as e:
-        cycles = e.args[1]
+        cycle = e.args[1]
     
     # Check for target date consistency
     for product in dag_model.products:
@@ -39,5 +39,5 @@ def validate_DAG(dag_model):
         if max_prereq_date is not None and product.target < max_prereq_date:
             invalid_dates.append(product)
     
-    valid = (cycles is None) and (len(invalid_dates) == 0)
-    return valid, cycles, invalid_dates
+    valid = (cycle is None) and (len(invalid_dates) == 0)
+    return valid, cycle, invalid_dates

@@ -21,9 +21,9 @@ class TestValidateDAG(unittest.TestCase):
         self.dag_model.add_dependency(self.product3, self.product2)
         self.dag_model.add_dependency(self.product2, self.product1)
         
-        valid, cycles, invalid_dates = validate_DAG(self.dag_model)
+        valid, cycle, invalid_dates = validate_DAG(self.dag_model)
         self.assertTrue(valid)
-        self.assertIsNone(cycles)
+        self.assertIsNone(cycle)
         self.assertEqual(len(invalid_dates), 0)
 
     def test_valid_dag_with_none_target_date(self):
@@ -33,9 +33,9 @@ class TestValidateDAG(unittest.TestCase):
         self.dag_model.add_dependency(self.product4, self.product1)
         self.dag_model.add_dependency(self.product2, self.product4)
         
-        valid, cycles, invalid_dates = validate_DAG(self.dag_model)
+        valid, cycle, invalid_dates = validate_DAG(self.dag_model)
         self.assertTrue(valid)
-        self.assertIsNone(cycles)
+        self.assertIsNone(cycle)
         self.assertEqual(len(invalid_dates), 0)
     
     def test_dag_with_cycle_and_none_target_date(self):
@@ -47,9 +47,9 @@ class TestValidateDAG(unittest.TestCase):
         self.dag_model.add_dependency(self.product4, self.product2)
         self.dag_model.add_dependency(self.product2, self.product1)
 
-        valid, cycles, invalid_dates = validate_DAG(self.dag_model)
+        valid, cycle, invalid_dates = validate_DAG(self.dag_model)
         self.assertFalse(valid)
-        self.assertIsNotNone(cycles)
+        self.assertIsNotNone(cycle)
         self.assertNotEqual(len(invalid_dates), 0)
 
     def test_dag_with_incorrect_target_dates_and_none(self):
@@ -60,9 +60,9 @@ class TestValidateDAG(unittest.TestCase):
         self.dag_model.add_dependency(self.product1, self.product4)
         self.dag_model.add_dependency(self.product4, self.product2)
 
-        valid, cycles, invalid_dates = validate_DAG(self.dag_model)
+        valid, cycle, invalid_dates = validate_DAG(self.dag_model)
         self.assertFalse(valid)
-        self.assertIsNone(cycles)
+        self.assertIsNone(cycle)
         self.assertNotEqual(len(invalid_dates), 0)
 
 if __name__ == '__main__':

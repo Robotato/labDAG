@@ -111,12 +111,17 @@ class DAGModel:
     def order(self):
         try:
             result = tuple(self._nodes[uuid] for uuid in self._sorter.static_order())
+            # re-create sorter
             self._sorter = TopologicalSorter(self._graph)
+
             return result
         except CycleError as e:
             msg = e.args[0]
             cycle_nodes = [f"{self._nodes[uuid].name} ({str(uuid)[-8:]})" for uuid in e.args[1]]
             e.args = (msg, cycle_nodes)
+
+            # re-create sorter
+            self._sorter = TopologicalSorter(self._graph)
             raise e
 
     @staticmethod
