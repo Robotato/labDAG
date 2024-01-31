@@ -163,7 +163,7 @@ class DAGModel:
 
             status = product_element.find('Status').text
             if status is not None:
-                status = Status(status)
+                status = Status(int(status))
 
             id = uuid.UUID(product_element.find('UUID').text)
             notes = product_element.find('Notes').text
