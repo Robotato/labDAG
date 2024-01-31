@@ -194,7 +194,7 @@ class DAGModel:
             product_element = ET.SubElement(root, "Product")
             ET.SubElement(product_element, "Name").text = product.name
             ET.SubElement(product_element,
-                          "Status").text = product.status.value
+                          "Status").text = str(product.status.value)
             ET.SubElement(product_element, "UUID").text = str(product._uuid)
             ET.SubElement(product_element, "Created").text = product._created.strftime(
                 "%d/%m/%Y %H:%M:%S")
