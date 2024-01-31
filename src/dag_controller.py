@@ -209,5 +209,9 @@ class LabManagementShell(cmd.Cmd):
         print("Goodbye!")
         return True
 
+    def postcmd(self, stop: bool, line: str) -> bool:
+        print()
+        return super().postcmd(stop, line)
+
 if __name__ == '__main__':
     LabManagementShell().cmdloop()
