@@ -102,6 +102,9 @@ class TestLabManagementShell(unittest.TestCase):
     def test_depends_command(self):
         pass
 
+    def test_free_command(self):
+        pass
+
     def test_validate_command(self):
         pass
 

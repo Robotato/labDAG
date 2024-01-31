@@ -20,11 +20,14 @@ def select_match(options, prompt=None):
             pass
 
 
-def select_product(dag_model, product_name):
+def select_product(dag_model, product_name, create_missing=True):
     matches = dag_model.get_products_by_name(product_name)
 
     if len(matches) == 0:
-        return Product(product_name)
+        if create_missing:
+            return Product(product_name)
+        else:
+            raise ValueError(f"No product with name {product_name} found.")
     elif len(matches) == 1:
         return matches[0]
     else:
@@ -137,6 +140,35 @@ class LabManagementShell(cmd.Cmd):
         except Exception as e:
             print(f"Error adding prerequisites: {e}")
 
+
+    def do_free(self, arg):
+        'Remove one or more prerequisites from a product: free <product> <prereq1> [prereq2 prereq3 ...]'
+        
+        try:
+            args = arg.split()
+            if len(args) < 2:
+                print("Please provide a product name and at least 1 prerequisite.")
+            
+            product = select_product(self.dag_model, args[0])
+            prereqs = [select_product(self.dag_model, pre) for pre in args[1:]]
+            self.dag_model.remove_dependencies(product, *prereqs)
+
+            print(f"Removed prerequisites from {args[0]}: {prereqs}")
+
+        except Exception as e:
+            print(f"Error removing prerequisites: {e}")
+
+    def do_rename(self, arg):
+        'Rename a product: rename <product> <new_name>'
+        try:
+            args = arg.split()
+            if len(args) != 2:
+                print("Please provide the current name of a product, and its new name.")
+            
+            product = select_product(self.dag_model, args[0], create_missing=False)
+            product.name = args[1]
+        except Exception as e:
+            print(f"Error renaming product: {e}")
 
     def do_mark(self, arg):
         'Mark a product with a specific status: mark <product> <status>'
