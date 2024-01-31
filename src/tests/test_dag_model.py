@@ -101,6 +101,11 @@ class TestDAGModel(unittest.TestCase):
         # Cleanup
         Path("temp.xml").unlink()
 
+    def test_str(self):
+        self.dag_model.add_dependency(self.product1, self.product3)
+        self.dag_model.add_dependency(self.product2, self.product1)
+        self.dag_model.add_dependency(self.product2, self.product4)
+        print(str(self.dag_model))
 
 if __name__ == '__main__':
     unittest.main()

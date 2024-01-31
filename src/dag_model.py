@@ -9,11 +9,11 @@ from warnings import warn
 
 class Status(Enum):
     TO_DO, IN_PROGRESS, DONE = range(3)
-    
+
     def to_symbol(self):
         # return "☐🧪☑"[self]
         return "⬜🚧✅"[self.value]
-    
+
     @staticmethod
     def from_string(string):
         string = string.lower().strip()
@@ -26,6 +26,7 @@ class Status(Enum):
         else:
             raise ValueError(f"Unrecognized status: {string}.")
 
+
 class Product():
     def __init__(self, name="", status=None, target=None, notes=None):
         self._uuid = uuid.uuid4()
@@ -34,7 +35,7 @@ class Product():
         self.status = status if status is not None else Status.TO_DO
         self.target = target
         self.notes = notes
-    
+
     def __eq__(self, __value: object) -> bool:
         return (self._uuid == __value._uuid
                 and self._created == __value._created
@@ -46,6 +47,7 @@ class Product():
     def __repr__(self) -> str:
         target_date_str = f" [{self.target.strftime('%d/%m/%Y')}]" if self.target is not None else ""
         return f"({str(self._uuid)[-8:]}) {self.name}{target_date_str} {self.status.to_symbol()}"
+
 
 class DAGModel:
     def __init__(self):
@@ -62,8 +64,12 @@ class DAGModel:
         for pre in prerequisites:
             if pre._uuid not in self._nodes:
                 self.add_product(pre)
-    
+
     def add_dependency(self, product, *prerequisites):
+        if product._uuid in self._nodes:
+            existing_prereqs = self.get_prerequisites(product)
+            prerequisites = [*existing_prereqs, *prerequisites]
+
         self.add_product(product, *prerequisites)
 
     def remove_product(self, product):
@@ -76,7 +82,7 @@ class DAGModel:
         for product_id, product in self._nodes.items():
             if product._uuid in self._graph[product_id]:
                 self._graph[product_id].remove(product._uuid)
-        
+
         # re-create sorter
         self._sorter = TopologicalSorter(self._graph)
 
@@ -93,15 +99,16 @@ class DAGModel:
 
     def get_prerequisites(self, product):
         return [self._nodes[pre_id] for pre_id in self._graph[product._uuid]]
-    
+
     def all_prerequisites(self, product):
         queue = [pre for pre in self.get_prerequisites(product)]
         seen = set()
-        
+
         while len(queue) > 0:
             pre = queue.pop()
             seen.add(pre._uuid)
-            queue.extend(p for p in self.get_prerequisites(pre) if p._uuid not in seen)
+            queue.extend(p for p in self.get_prerequisites(
+                pre) if p._uuid not in seen)
 
             yield pre
 
@@ -119,7 +126,7 @@ class DAGModel:
         endpoints = set(self._nodes.keys())
         for pred in self._graph.values():
             endpoints -= pred
-        
+
         return [self._nodes[n] for n in endpoints]
 
     @property
@@ -129,14 +136,16 @@ class DAGModel:
     @property
     def order(self):
         try:
-            result = tuple(self._nodes[uuid] for uuid in self._sorter.static_order())
+            result = tuple(self._nodes[uuid]
+                           for uuid in self._sorter.static_order())
             # re-create sorter
             self._sorter = TopologicalSorter(self._graph)
 
             return result
         except CycleError as e:
             msg = e.args[0]
-            cycle_nodes = [f"{self._nodes[uuid].name} ({str(uuid)[-8:]})" for uuid in e.args[1]]
+            cycle_nodes = [
+                f"{self._nodes[uuid].name} ({str(uuid)[-8:]})" for uuid in e.args[1]]
             e.args = (msg, cycle_nodes)
 
             # re-create sorter
@@ -155,11 +164,12 @@ class DAGModel:
             status = product_element.find('Status').text
             if status is not None:
                 status = Status(status)
-            
+
             id = uuid.UUID(product_element.find('UUID').text)
             notes = product_element.find('Notes').text
 
-            created = datetime.strptime(product_element.find("Created").text, "%d/%m/%Y %H:%M:%S")
+            created = datetime.strptime(product_element.find(
+                "Created").text, "%d/%m/%Y %H:%M:%S")
 
             target_date = product_element.find('Target')
             if target_date is not None:
@@ -169,7 +179,8 @@ class DAGModel:
             for pre in product_element.find("Prerequisites"):
                 prereqs.append(dag_model._nodes[uuid.UUID(pre.text)])
 
-            product = Product(name, status=status, notes=notes, target=target_date)
+            product = Product(name, status=status,
+                              notes=notes, target=target_date)
             product._uuid = id
             product._created = created
             dag_model.add_product(product, *prereqs)
@@ -182,26 +193,35 @@ class DAGModel:
         for product in self.order:
             product_element = ET.SubElement(root, "Product")
             ET.SubElement(product_element, "Name").text = product.name
-            ET.SubElement(product_element, "Status").text = product.status.value
+            ET.SubElement(product_element,
+                          "Status").text = product.status.value
             ET.SubElement(product_element, "UUID").text = str(product._uuid)
-            ET.SubElement(product_element, "Created").text = product._created.strftime("%d/%m/%Y %H:%M:%S")
+            ET.SubElement(product_element, "Created").text = product._created.strftime(
+                "%d/%m/%Y %H:%M:%S")
             ET.SubElement(product_element, "Notes").text = product.notes
             if product.target:
-                ET.SubElement(product_element, "Target").text = product.target.strftime("%Y-%m-%d")
+                ET.SubElement(product_element, "Target").text = product.target.strftime(
+                    "%Y-%m-%d")
 
             prereqs_element = ET.SubElement(product_element, "Prerequisites")
             for pre in self.get_prerequisites(product):
-                ET.SubElement(prereqs_element, "Prerequisite").text = str(pre._uuid)
+                ET.SubElement(prereqs_element,
+                              "Prerequisite").text = str(pre._uuid)
 
         tree = ET.ElementTree(root)
         tree.write(filepath)
-    
+
     def __eq__(self, __value: object) -> bool:
         return (self._nodes == __value._nodes
                 and self._graph == __value._graph)
-    
+
     def __str__(self) -> str:
-        result = ""
-        for product in self.order:
-            result += f"{str(product)}\n"
-        return result
+        def str_iter(products, indent=0):
+            tab = "\t"
+            result = ""
+            for p in products:
+                result += f"{tab * indent}{str(p)}\n"
+                result += str_iter(self.get_prerequisites(p), indent + 1)
+            return result
+
+        return str_iter(self.endpoints)
