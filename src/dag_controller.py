@@ -1,6 +1,8 @@
 import cmd
+import matplotlib.pyplot as plt
 from datetime import datetime
 from src.dag_model import DAGModel, Product, Status
+from src.visualize import gantt
 from src.validate import validate_DAG
 
 def select_match(options, prompt=None):
@@ -77,9 +79,16 @@ class LabManagementShell(cmd.Cmd):
 
     
     def do_show(self, arg):
-        'Show the current DAG: show'
+        'Show the current DAG, or (if given) details of a product: show [product]'
         try:
-            print(self.dag_model)
+            if len(arg) == 0:
+                print(self.dag_model)
+            else:
+                product = select_product(self.dag_model, arg, create_missing=False)
+                print(product)
+                print(f"Created: {product._created}")
+                print(f"Target: {product.target}")
+                print(f"Notes:\n{product.notes}")
         except Exception as e:
             print(f"Error showing DAG: {e}")
 
@@ -225,6 +234,15 @@ class LabManagementShell(cmd.Cmd):
                     print(f"Products with target dates before targets of some predecessor:\n\t{sep.join([str(prod) for prod in dates])}")
         except Exception as e:
             print(f"Error validating DAG: {e}")
+
+    
+    def do_gantt(self, arg):
+        'Visualize the current DAG model as a Gantt chart: gantt'
+        try:
+            gantt(dag_model=self.dag_model)
+            plt.show()
+        except Exception as e:
+            print(f"Error visualizing DAG: {e}")
 
 
     def do_save(self, arg):
