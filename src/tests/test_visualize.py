@@ -3,7 +3,7 @@ import unittest
 import matplotlib.pyplot as plt
 from datetime import datetime
 from src.dag_model import DAGModel, Product, Status
-from src.visualize import gantt
+from src.visualize import gantt, gantt_2
 
 class TestVisualize(unittest.TestCase):
     def setUp(self):
