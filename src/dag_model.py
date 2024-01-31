@@ -85,6 +85,14 @@ class DAGModel:
 
         # re-create sorter
         self._sorter = TopologicalSorter(self._graph)
+    
+    def remove_dependencies(self, product, *prerequisites):
+        # remove dependencies from graph
+        prereqs_to_remove = {pre._uuid for pre in prerequisites}
+        self._graph[product._uuid] -= prereqs_to_remove
+
+        # re-create sorter
+        self._sorter = TopologicalSorter(self._graph)
 
     def get_product_by_uuid(self, uuid):
         return self._nodes[uuid]

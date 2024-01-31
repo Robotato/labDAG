@@ -22,6 +22,13 @@ class TestDAGModel(unittest.TestCase):
         self.dag_model.remove_product(self.product1)
         self.assertNotIn(self.product1._uuid, self.dag_model._nodes)
 
+    def test_remove_dependencies(self):
+        self.dag_model.add_product(self.product1, self.product2)
+        self.dag_model.remove_dependencies(self.product1, self.product2)
+
+        self.assertEqual(self.dag_model.get_prerequisites(self.product1), [])
+        self.assertIn(self.product2._uuid, self.dag_model._nodes)
+
     def test_get_products_by_name(self):
         self.dag_model.add_product(self.product1)
         self.dag_model.add_product(self.product2)
