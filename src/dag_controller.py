@@ -95,6 +95,9 @@ class LabManagementShell(cmd.Cmd):
                 print(product)
                 print(f"Created: {product._created}")
                 print(f"Target: {product.target}")
+
+                print(f"\n{product.description}\n")
+
                 print("Resources:")
                 if product.resources:
                     print("\n\t".join(f"{i}. {res}" for i, res in enumerate(product.resources)))
