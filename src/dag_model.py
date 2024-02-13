@@ -28,7 +28,7 @@ class Status(Enum):
 
 
 class Product():
-    def __init__(self, name="", status=None, target=None, notes=None, resources=None):
+    def __init__(self, name="", status=None, target=None, notes=None, resources=None, description=None):
         self._uuid = uuid.uuid4()
         self._created = datetime.now().replace(microsecond=0)
         self.name = name
@@ -36,6 +36,7 @@ class Product():
         self.target = target
         self.notes = notes
         self.resources = resources if resources is not None else []
+        self.description = description if description is not None else ""
 
     def __eq__(self, __value: object) -> bool:
         return (self._uuid == __value._uuid
@@ -43,10 +44,13 @@ class Product():
                 and self.name == __value.name
                 and self.status == __value.status
                 and self.target == __value.target
-                and self.notes == __value.notes)
+                and self.notes == __value.notes
+                and self.resources == __value.resources
+                and self.description == __value.description)
 
     def __repr__(self) -> str:
-        target_date_str = f" [{self.target.strftime('%d/%m/%Y')}]" if self.target is not None else ""
+        target_date_str = f" [{self.target.strftime(
+            '%d/%m/%Y')}]" if self.target is not None else ""
         return f"({str(self._uuid)[-8:]}) {self.name}{target_date_str} {self.status.to_symbol()}"
 
 
@@ -86,7 +90,7 @@ class DAGModel:
 
         # re-create sorter
         self._sorter = TopologicalSorter(self._graph)
-    
+
     def remove_dependencies(self, product, *prerequisites):
         # remove dependencies from graph
         prereqs_to_remove = {pre._uuid for pre in prerequisites}
@@ -163,24 +167,36 @@ class DAGModel:
 
     @staticmethod
     def from_xml(filepath):
+        def get_mandatory_node_content(parent, nodename):
+            try:
+                node = parent.find(nodename)
+                return node.text
+            except AttributeError:
+                raise ValueError(f"{nodename} not found in {parent}.")
+
+        def get_optional_node_content(parent, nodename, default=None):
+            node = parent.find(nodename)
+            return node.text if node is not None else default
+
         dag_model = DAGModel()
         tree = ET.parse(filepath)
         root = tree.getroot()
 
         for product_element in root.findall('Product'):
-            name = product_element.find('Name').text
+            name = get_mandatory_node_content(product_element, "Name")
 
-            status = product_element.find('Status').text
-            if status is not None:
-                status = Status(int(status))
+            status = Status(
+                int(get_optional_node_content(product_element, "Status", 0)))
 
-            id = uuid.UUID(product_element.find('UUID').text)
-            notes = product_element.find('Notes').text
+            id = uuid.UUID(get_mandatory_node_content(product_element, "UUID"))
+            notes = get_optional_node_content(product_element, "Notes")
+            description = get_optional_node_content(
+                product_element, "Description")
 
             created = datetime.strptime(product_element.find(
                 "Created").text, "%d/%m/%Y %H:%M:%S")
 
-            target_date = product_element.find('Target')
+            target_date = get_optional_node_content(product_element, "Target")
             if target_date is not None:
                 target_date = datetime.strptime(target_date.text, "%Y-%m-%d")
 
@@ -188,8 +204,14 @@ class DAGModel:
             for pre in product_element.find("Prerequisites"):
                 prereqs.append(dag_model._nodes[uuid.UUID(pre.text)])
 
+            resources = []
+            for res in product_element.find("Resources"):
+                resources.append(res.text)
+
+            
             product = Product(name, status=status,
-                              notes=notes, target=target_date)
+                              notes=notes, target=target_date,
+                              resources=resources, description=description)
             product._uuid = id
             product._created = created
             dag_model.add_product(product, *prereqs)
@@ -208,6 +230,8 @@ class DAGModel:
             ET.SubElement(product_element, "Created").text = product._created.strftime(
                 "%d/%m/%Y %H:%M:%S")
             ET.SubElement(product_element, "Notes").text = product.notes
+            ET.SubElement(product_element,
+                          "Description").text = product.description
             if product.target:
                 ET.SubElement(product_element, "Target").text = product.target.strftime(
                     "%Y-%m-%d")
@@ -216,6 +240,10 @@ class DAGModel:
             for pre in self.get_prerequisites(product):
                 ET.SubElement(prereqs_element,
                               "Prerequisite").text = str(pre._uuid)
+
+            resources_element = ET.SubElement(product_element, "Resources")
+            for res in product.resources:
+                ET.SubElement(resources_element, "Resource").text = res
 
         tree = ET.ElementTree(root)
         tree.write(filepath)

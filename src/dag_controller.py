@@ -203,6 +203,21 @@ class LabManagementShell(cmd.Cmd):
 
         except ValueError:
             print("Invalid arguments. Usage: mark <product> <status>")
+
+    
+    def do_describe(self, arg):
+        "Set the description of a product: describe <product> <description>"
+        try:
+            args = split(arg)
+            if len(args) != 2:
+                raise Exception(f"Expected 2 arguments, {len(args)} found (did you forget to wrap description in quotes?)")
+            
+            product_name, description = args
+            product = select_product(self.dag_model, product_name)
+            product.description = description
+            print("Set description.")
+        except Exception as e:
+            print(f"Error setting description: {e}")
     
 
     def do_resource(self, arg):
