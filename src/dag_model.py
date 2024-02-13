@@ -28,13 +28,14 @@ class Status(Enum):
 
 
 class Product():
-    def __init__(self, name="", status=None, target=None, notes=None):
+    def __init__(self, name="", status=None, target=None, notes=None, resources=None):
         self._uuid = uuid.uuid4()
         self._created = datetime.now().replace(microsecond=0)
         self.name = name
         self.status = status if status is not None else Status.TO_DO
         self.target = target
         self.notes = notes
+        self.resources = resources if resources is not None else []
 
     def __eq__(self, __value: object) -> bool:
         return (self._uuid == __value._uuid

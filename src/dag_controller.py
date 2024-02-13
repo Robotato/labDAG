@@ -1,11 +1,13 @@
 import cmd
+import webbrowser
 import matplotlib.pyplot as plt
+from shlex import split, quote
 from datetime import datetime
 from src.dag_model import DAGModel, Product, Status
 from src.visualize import gantt
 from src.validate import validate_DAG
 
-def select_match(options, prompt=None):
+def select_match(options, prompt=None, return_index=False):
     if prompt is not None:
         print(prompt)
     
@@ -17,7 +19,11 @@ def select_match(options, prompt=None):
 
         try:
             choice = int(choice)
-            return options[choice - 1]
+
+            if not return_index:
+                return options[choice - 1]
+            else:
+                return choice-1, options[choice - 1]
         except:
             pass
 
@@ -85,9 +91,15 @@ class LabManagementShell(cmd.Cmd):
                 print(self.dag_model)
             else:
                 product = select_product(self.dag_model, arg, create_missing=False)
+                print()
                 print(product)
                 print(f"Created: {product._created}")
                 print(f"Target: {product.target}")
+                print("Resources:")
+                if product.resources:
+                    print("\n\t".join(f"{i}. {res}" for i, res in enumerate(product.resources)))
+                else:
+                    print("\tNone")
                 print(f"Notes:\n{product.notes}")
         except Exception as e:
             print(f"Error showing DAG: {e}")
@@ -191,6 +203,72 @@ class LabManagementShell(cmd.Cmd):
 
         except ValueError:
             print("Invalid arguments. Usage: mark <product> <status>")
+    
+
+    def do_resource(self, arg):
+        """Add, delete, or open a resource.
+        Usage:
+            Show resources: resource show <product>
+
+            Add a resource: resource add <product> <value1> [value2 value3...]
+            
+            Delete a resource: resource remove <product>
+            
+            Open a resource: resource open <product>
+                -w : When running in WSL, open using windows application
+        """
+
+        try:
+            args = split(arg)
+            subcommand = args[0]
+            subargs = args[1:]
+            
+            match subcommand:
+                case "show":
+                    product = select_product(self.dag_model, subargs[0], create_missing=False)
+                    print(f"Resources associated with {product}: ")
+                    print("\n".join(f"\t{i+1}. {res}" for i, res in enumerate(product.resources)))
+                case "add":
+                    product = select_product(self.dag_model, subargs[0], create_missing=False)
+                    product.resources.extend(subargs[1:])
+                case "remove":
+                    product = select_product(self.dag_model, subargs[0], create_missing=False)
+
+                    match len(product.resources):
+                        case 0:
+                            raise Exception(f"No resources associated with {product}.")
+                        case 1:
+                            removed = product.resources[0]
+                            product.resources = []
+                        case _:
+                            i, removed = select_match(product.resources, "Remove which resource?", return_index=True)
+                            product.resources.pop(i)
+                    
+                    print(f"Removed {removed} from {product}.")
+                        
+                case "open":
+                    product = select_product(self.dag_model, subargs[0], create_missing=False)
+
+                    if len(product.resources) == 0:
+                        print(f"No resources associated with {product}.")
+                        return
+                    resource = select_match(product.resources, "Open which resource?")
+                    flags = subargs[2:]
+
+                    open_in_windows = False
+                    for flag in flags:
+                        if flag == "-w":
+                            open_in_windows = True
+                    
+                    if open_in_windows:
+                        pass
+                    else:
+                        webbrowser.open(quote(resource))
+                case _:
+                    raise Exception(f"Unrecognized subcommand `{subcommand}`.")
+        except Exception as e:
+            print(f"Error adding/deleting/opening resource: {e}")
+
     
 
     def do_target(self, arg):
